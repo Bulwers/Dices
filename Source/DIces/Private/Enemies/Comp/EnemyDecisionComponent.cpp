@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Enemies/Comp/EnemyDecisionComponent.h"
@@ -15,14 +14,18 @@ void UEnemyDecisionComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Strategy = NewObject<UEnemyStrategy>();
-	Strategy->InitNameAndData(StrategyName);
 }
 
 void UEnemyDecisionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+}
+
+void UEnemyDecisionComponent::SetStrategy(const FName StrategyName)
+{
+	Strategy = NewObject<UEnemyStrategy>();
+	Strategy->InitNameAndData(StrategyName);
 }
 
 int UEnemyDecisionComponent::FindSlotToPlaceDice(
@@ -35,29 +38,29 @@ int UEnemyDecisionComponent::FindSlotToPlaceDice(
 		{
 			EEnemyPlacementDecision = EDicePlacementDecision::BlindPlacement;
 			return i;
-    	}
+		}
 		if (PlayerDicesOnTable[i] != nullptr && EnemyDicesOnTable[i] == nullptr)
 		{
 			EEnemyPlacementDecision = EDicePlacementDecision::KnowingPlacement;
 			return i;
 		}
 	}
+	
 	return -1;
 }
 
 ABaseDice* UEnemyDecisionComponent::ChoosingDiceToPutOnTable(
 	const TArray<ABaseDice*>& PlayerDicesOnTable,
-	const TArray<ABaseDice*>& EnemyDicesOnTable,
-	const TArray<ABaseDice*>& EnemyDices)
+	const TArray<ABaseDice*>& EnemyDices,
+	const int Slot)
 {
-	int Slot = FindSlotToPlaceDice(PlayerDicesOnTable, EnemyDicesOnTable);
 	int BestResultScore = -1;
 	int BestResultIndex = -1;
 	
 	TArray<int> EnemyAvailableDices;
-	for (const int i : { 0, 1, 2, 3, 4, 5})
+	for (int i = 0; i < EnemyDices.Num(); i++)
 	{
-		if (!EnemyDices[i]->bIsEnemyChoosen)
+		if (IsValid(EnemyDices[i]) && !EnemyDices[i]->bIsEnemyChoosen)
 		{
 			EnemyAvailableDices.Add(i);
 		}
@@ -94,4 +97,14 @@ ABaseDice* UEnemyDecisionComponent::ChoosingDiceToPutOnTable(
 		return EnemyDices[BestResultIndex];
 	}
 	return EnemyDices[EnemyAvailableDices[0]];
+}
+
+TPair<ABaseDice*, int> UEnemyDecisionComponent::GetDiceToPlace(
+	const TArray<ABaseDice*>& PlayerDicesOnTable,
+	const TArray<ABaseDice*>& EnemyDicesOnTable,
+	const TArray<ABaseDice*>& EnemyDicesOnHand)
+{
+	const int Slot = FindSlotToPlaceDice(PlayerDicesOnTable,EnemyDicesOnTable);
+	ABaseDice* Dice = ChoosingDiceToPutOnTable(PlayerDicesOnTable, EnemyDicesOnHand, Slot);
+	return TPair<ABaseDice*, int>(Dice, Slot);
 }

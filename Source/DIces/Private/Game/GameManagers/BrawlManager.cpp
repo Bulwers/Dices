@@ -80,7 +80,8 @@ void UBrawlManager::DicesPlacementSequence(ABaseDice* PlacedDice)
 	// Counting placed dices
 	ABaseDice* LastDicePlaced = PlacedDice;
 	DicePlaced++;
-	if (LastDicePlaced->ActorHasTag(FName("BigDice")))
+	static const FName BigDice(TEXT("BigDice"));
+	if (LastDicePlaced->ActorHasTag(BigDice))
 	{
 		DicePlaced++;
 	}
@@ -149,8 +150,9 @@ void UBrawlManager::CheckingResults()
 			// Checking if dices are visible and if they have fang tag for result calculation
 			if (PlayerDice->bIsVisible && EnemyDice->bIsVisible)
 			{
-				if (PlayerDice->ActorHasTag(FName("Fang")) ||
-					EnemyDice->ActorHasTag(FName("Fang")))
+				static const FName Fang(TEXT("Fang"));
+				if (PlayerDice->ActorHasTag(Fang) ||
+					EnemyDice->ActorHasTag(Fang))
 				{
 					FinalResults.Add(0);
 				}
@@ -202,7 +204,9 @@ void UBrawlManager::ResetDicesPosition()
 	CurrentState = ECurrentState::Waiting;
 	Player->MoveCamera(ECamPosition::Bottom);
 	Player->ResetDicesPosition();
+	for (int& Result : PlayerResults) Result = 0;
 	Enemy->ResetDicesPosition();
+	for (int& Result : EnemyResults) Result = 0;
 }
 
 // Resetting points after brawl

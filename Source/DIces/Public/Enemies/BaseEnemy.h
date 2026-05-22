@@ -68,9 +68,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Components")
 	class UHealthComponent* EnemyHealthComp;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Enemy|Components")
-	class UEnemyDecisionComponent* EnemyDecisionComp;
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Enemy|Components")
 	class UEnemyDiceComponent* EnemyDiceComp;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Enemy|Components")
+	class UEnemyDecisionComponent* EnemyDecisionComp;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Components")
+	TSubclassOf<UEnemyDecisionComponent> DecisionComponentToSpawn;
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Components|Strategy")
+	FName StrategyName;
 
 	UPROPERTY(VisibleAnywhere)
 	bool bWasTableHit;
@@ -86,6 +90,9 @@ protected:
 	virtual void EnemySpawnDices();
 	UPROPERTY(EditDefaultsOnly, Category= "Enemy|Dices")
 	TArray<TSubclassOf<ABaseDice>> DicesToSpawn;
+	
+	UPROPERTY(EditDefaultsOnly, Category= "Enemy|Dices")
+	TArray<FVector> DicesSpots;
 	
 	UFUNCTION()
 	virtual void DeathAction();

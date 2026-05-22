@@ -24,11 +24,14 @@ public:
 	
 	UEnemyDecisionComponent();
 	
-	// Finds slot index to place dice on table // Returns -1 if there is no slot to place dice
-	UFUNCTION(BlueprintCallable)
-	virtual int FindSlotToPlaceDice(const TArray<ABaseDice*>& PlayerDicesOnTable, const TArray<ABaseDice*>& EnemyDicesOnTable);
-	UFUNCTION(BlueprintCallable)
-	virtual ABaseDice* ChoosingDiceToPutOnTable(const TArray<ABaseDice*>& PlayerDicesOnTable, const TArray<ABaseDice*>& EnemyDicesOnTable, const TArray<ABaseDice*>& EnemyDices);
+	TPair<ABaseDice*, int> GetDiceToPlace(
+		const TArray<ABaseDice*>& PlayerDicesOnTable,
+		const TArray<ABaseDice*>& EnemyDicesOnTable,
+		const TArray<ABaseDice*>& EnemyDicesOnHand);
+
+	UFUNCTION()
+	void SetStrategy(const FName StrategyName);
+	
 	
 protected:
 	
@@ -37,10 +40,18 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	EDicePlacementDecision EEnemyPlacementDecision;
 	
+	// Finds slot index to place dice on table // Returns -1 if there is no slot to place dice
+	virtual int FindSlotToPlaceDice(
+		const TArray<ABaseDice*>& PlayerDicesOnTable, 
+		const TArray<ABaseDice*>& EnemyDicesOnTable);
+	
+	virtual ABaseDice* ChoosingDiceToPutOnTable(
+		const TArray<ABaseDice*>& PlayerDicesOnTable,
+		const TArray<ABaseDice*>& EnemyDices,
+		const int Slot);
+	
 	UPROPERTY()
 	class UEnemyStrategy* Strategy;
-	UPROPERTY(EditAnywhere)
-	FName StrategyName;
 
 public:	
 	

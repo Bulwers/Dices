@@ -8,13 +8,13 @@
 #include "Algo/AllOf.h"
 #include "Enemies/Comp/EnemyDecisionComponent.h"
 #include "Enemies/Comp/EnemyDiceComponent.h"
+#include "WorldPartition/WorldPartitionRuntimeLevelStreamingCell.h"
 
 ABaseEnemy::ABaseEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
 	EnemyHealthComp = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
-	EnemyDecisionComp = CreateDefaultSubobject<UEnemyDecisionComponent>(TEXT("EnemyDecisionComp"));
 	EnemyDiceComp = CreateDefaultSubobject<UEnemyDiceComponent>(TEXT("EnemyDiceComp"));
 }
 
@@ -27,7 +27,13 @@ void ABaseEnemy::BeginPlay()
 	{
 		Player->OnDiceRolled.AddUObject(this, &ABaseEnemy::EnemyDiceRolling);
 	}
+	
 	EnemyHealthComp->OnDeathEffects.BindUObject(this, &ABaseEnemy::DeathAction);
+	
+	EnemyDecisionComp = NewObject<UEnemyDecisionComponent>(this, DecisionComponentToSpawn, TEXT("EnemyDecisionComp"));
+	EnemyDecisionComp->RegisterComponent();
+	EnemyDecisionComp->SetStrategy(StrategyName);
+	
 	DialogueManager = Cast<ADialogueManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ADialogueManager::StaticClass()));
 	if (!DialogueManager)
 	{
@@ -87,19 +93,18 @@ void ABaseEnemy::EnemyDiceRolling()
 
 void ABaseEnemy::PlaceDiceOnTable()
 {
-	int Spot = EnemyDecisionComp->FindSlotToPlaceDice(PlayerDicesOnTable, EnemyDicesOnTable);
-	const TArray Spots = {
-		FVector(5, -25, 98),
-		FVector(5, -15, 98),
-		FVector(5, -5, 98),
-		FVector(5, 5, 98),
-		FVector(5, 15, 98),
-		FVector(5, 25, 98)
-	};
-	ABaseDice* Dice = EnemyDecisionComp->ChoosingDiceToPutOnTable(PlayerDicesOnTable, EnemyDicesOnTable, EnemyDicesOnHand);
+	TPair<ABaseDice*, int> const DiceAndSlot = EnemyDecisionComp->GetDiceToPlace(PlayerDicesOnTable, EnemyDicesOnTable, EnemyDicesOnHand);
+	const int Spot = DiceAndSlot.Value;
+	ABaseDice* Dice = DiceAndSlot.Key;
 	if (!Dice) return;
 	EnemyDicesOnTable[Spot] = Dice;
-	Dice->DiceMesh->SetWorldLocation(Spots[Spot], false, nullptr, ETeleportType::None);
+	static const FName BigDice(TEXT("BigDice"));
+	if (Dice->ActorHasTag(BigDice))
+	{
+		EnemyDicesOnTable[Spot + 1] = Dice;
+		Dice->DiceMesh->SetWorldLocation(DicesSpots[Spot/2], false, nullptr, ETeleportType::None);
+	}
+	else Dice->DiceMesh->SetWorldLocation(DicesSpots[Spot], false, nullptr, ETeleportType::None);
 	Dice->bIsEnemyChoosen = true;
 	OnDicePlacement.ExecuteIfBound(Dice);
 }
@@ -120,10 +125,10 @@ void ABaseEnemy::ResetDicesPosition()
 
 void ABaseEnemy::DestroyFangsOnTable()
 {
-	static const FName Tag(TEXT("Fang"));
+	static const FName Fang(TEXT("Fang"));
 	for (ABaseDice*& Dice : EnemyDicesOnTable)
 	{
-		if (IsValid(Dice) && Dice->ActorHasTag(Tag))
+		if (IsValid(Dice) && Dice->ActorHasTag(Fang))
 		{
 			Dice->Destroy();
 			Dice = nullptr;
