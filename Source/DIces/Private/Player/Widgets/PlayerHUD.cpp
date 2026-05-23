@@ -15,17 +15,6 @@ void UPlayerHUD::NativeConstruct()
     GameState = Cast<AGameStateBaseClass>(UGameplayStatics::GetGameState(GetWorld()));
 	Waiter = Cast<AWaiter>(UGameplayStatics::GetActorOfClass(GetWorld(), AWaiter::StaticClass()));
 
-}
-
-void UPlayerHUD::EndTurn()
-{
-    GameState->GetBrawlManager()->CheckingResults();
-	GameState->GetBrawlManager()->ResetSettings();
-    GameState->GetBrawlManager()->ResetDicesPosition();
-    GameState->GetBrawlManager()->ResetPoints();
-}
-
-void UPlayerHUD::WaiterDismissButton()
-{
-	Waiter->SetStartingLocAndRot();
+	if (GameState) EndTurnDelegate.AddUObject(GameState->GetBrawlManager(), &UBrawlManager::EndTurn);
+	if (Waiter) DismissDelegate.BindUObject(Waiter, &AWaiter::SetStartingLocAndRot);
 }

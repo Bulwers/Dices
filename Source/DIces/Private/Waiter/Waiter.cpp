@@ -35,22 +35,21 @@ void AWaiter::BeginPlay()
 	Super::BeginPlay();
 
 	GameState = Cast<AGameStateBaseClass>(UGameplayStatics::GetGameState(GetWorld()));
+	if (GameState) GameState->GetWaiterManager()->WaiterCall.BindUObject(this, &AWaiter::DrinkOffer);
+	
 	SetActorLocationAndRotation(StartLoc, StartRot, false, nullptr, ETeleportType::None);
-	GameState->GetWaiterManager()->WaiterCall.BindUObject(this, &AWaiter::DrinkOffer);
-
+	
 	DrinkTier = GameState->GetEnemiesCount();
 }
 
 void AWaiter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void AWaiter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
 
 void AWaiter::SetStartingLocAndRot()

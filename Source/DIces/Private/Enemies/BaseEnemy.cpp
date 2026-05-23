@@ -8,7 +8,6 @@
 #include "Algo/AllOf.h"
 #include "Enemies/Comp/EnemyDecisionComponent.h"
 #include "Enemies/Comp/EnemyDiceComponent.h"
-#include "WorldPartition/WorldPartitionRuntimeLevelStreamingCell.h"
 
 ABaseEnemy::ABaseEnemy()
 {
@@ -23,10 +22,7 @@ void ABaseEnemy::BeginPlay()
 	Super::BeginPlay();
 
 	Player = Cast<ABasePlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
-	if (Player)
-	{
-		Player->OnDiceRolled.AddUObject(this, &ABaseEnemy::EnemyDiceRolling);
-	}
+	if (Player) Player->OnDiceRolled.AddUObject(this, &ABaseEnemy::EnemyDiceRolling);
 	
 	EnemyHealthComp->OnDeathEffects.BindUObject(this, &ABaseEnemy::DeathAction);
 	
@@ -35,10 +31,7 @@ void ABaseEnemy::BeginPlay()
 	EnemyDecisionComp->SetStrategy(StrategyName);
 	
 	DialogueManager = Cast<ADialogueManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ADialogueManager::StaticClass()));
-	if (!DialogueManager)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("DialogueManager not found"));
-	}
+	if (!DialogueManager) UE_LOG(LogTemp, Warning, TEXT("DialogueManager not found"));
 	
 	EnemyDicesOnHand.Init(nullptr, DicesToSpawn.Num());
 	EnemyDicesOnTable.Init(nullptr, 6);

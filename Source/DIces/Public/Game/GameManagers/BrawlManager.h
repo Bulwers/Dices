@@ -49,6 +49,8 @@ public:
 	
 	UFUNCTION()
 	void StartTurn();
+	UFUNCTION()
+	void EndTurn();
 	
 	void DicesPlacementSequence(ABaseDice* PlacedDice);
 	

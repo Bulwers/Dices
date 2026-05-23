@@ -28,6 +28,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player|Dices")
 	TArray<ABaseDice*> PlayerDicesOnTable;
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category= "Enemy|Dices")
+	TArray<FVector> DicesSpots;
+	
 	UFUNCTION()
 	void GetHit() const;
 	UFUNCTION()
@@ -90,9 +93,6 @@ protected:
 	virtual void EnemySpawnDices();
 	UPROPERTY(EditDefaultsOnly, Category= "Enemy|Dices")
 	TArray<TSubclassOf<ABaseDice>> DicesToSpawn;
-	
-	UPROPERTY(EditDefaultsOnly, Category= "Enemy|Dices")
-	TArray<FVector> DicesSpots;
 	
 	UFUNCTION()
 	virtual void DeathAction();

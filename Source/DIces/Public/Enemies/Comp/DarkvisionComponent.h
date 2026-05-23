@@ -6,7 +6,9 @@
 #include "Components/ActorComponent.h"
 #include "DarkvisionComponent.generated.h"
 
-class ABaseEnemy;
+class ABaseDice;
+class ADicePlayerController;
+class UPlayerHUD;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DICES_API UDarkvisionComponent : public UActorComponent
@@ -21,9 +23,12 @@ public:
 	void LightsOut();
 	
 	UFUNCTION(BlueprintCallable)
-	void SwapDices(ABaseEnemy* Owner);
+	void SwapDices(
+		UPARAM(ref) TArray<ABaseDice*>& EnemyDicesOnTable, 
+		const TArray<ABaseDice*>& PlayerDicesOnTable, 
+		const TArray<FVector>& Spots);
 	UFUNCTION(BlueprintCallable)
-	void SwapbCanSwapDices() { bCanSwapDices = !bCanSwapDices; }
+	void SwapbCanSwapDices() { bIsCandleExtinguished = !bIsCandleExtinguished; }
 	
 protected:
 	
@@ -32,9 +37,19 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Candle")
 	class ACandleClass* CandleRef;
 	UPROPERTY()
-	bool bCanSwapDices = false;
+	ADicePlayerController* PlayerController;
+	UPROPERTY()
+	UPlayerHUD* PlayerHUD;
+	
+	UPROPERTY(VisibleAnywhere, Category= "Candle")
+	bool bIsCandleExtinguished = false;
 	UFUNCTION()
 	void InitCandleRef();
+	UPROPERTY(VisibleAnywhere, Category= "Candle")
+	bool bIsSwapped = false;
+	
+	UFUNCTION()
+	void EndTurn() { bIsSwapped = false; }
 
 public:	
 	

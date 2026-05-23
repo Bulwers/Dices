@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Game/GameManagers/BrawlManager.h"
@@ -8,37 +7,30 @@
 #include "Game/GameStateBaseClass.h"
 #include "Game/GameManagers/TurnManager.h"
 
-// Sets default values for this component's properties
+
 UBrawlManager::UBrawlManager()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
 }
 
-// Called when the game starts
 void UBrawlManager::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	// Initializing arrays for results and bonuses
 	EnemyResults.Init(0, 6);
 	PlayerResults.Init(0, 6);
 	EnemyBonus.Init(0, 6);
 	PlayerBonus.Init(0, 6);
-	// Initializing points
+	
 	BigPlayerPoints = 0;
 	BigEnemyPoints = 0;
 }
 
-// Called every frame
 void UBrawlManager::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-// Initializing references and settings for brawl
 void UBrawlManager::Initialize(AGameStateBaseClass *InGameState, ABasePlayer* InPlayer, UTurnManager* InTurnManager)
 {
 	GameState = InGameState;
@@ -47,16 +39,13 @@ void UBrawlManager::Initialize(AGameStateBaseClass *InGameState, ABasePlayer* In
 	CurrentState = ECurrentState::Waiting;
 }
 
-// Starting turn when player rolls dices
 void UBrawlManager::StartTurn()
 {
-	// Checking if enemy is new for brawl and setting first player
 	if (bIsNewEnemy)
 	{
 		bIsPlayerFirst = FMath::RandBool();
 		TurnManager->WhoseFirst(bIsPlayerFirst);
 	}
-	// Setting first player for dices placement
 	if (TurnManager->IsPlayerTurn())
 	{
 		SetPlacement(true, false, true);
@@ -70,14 +59,20 @@ void UBrawlManager::StartTurn()
 	CurrentState = ECurrentState::DicePlacement;
 }
 
-// Setting sequence for dices placement
+void UBrawlManager::EndTurn()
+{
+	CheckingResults();
+	ResetSettings();
+	ResetDicesPosition();
+	ResetPoints();
+}
+
 void UBrawlManager::DicesPlacementSequence(ABaseDice* PlacedDice)
 {
 	if (!Enemy) return;
 	
 	if (CurrentState != ECurrentState::DicePlacement) return;
 	
-	// Counting placed dices
 	ABaseDice* LastDicePlaced = PlacedDice;
 	DicePlaced++;
 	static const FName BigDice(TEXT("BigDice"));
@@ -86,7 +81,6 @@ void UBrawlManager::DicesPlacementSequence(ABaseDice* PlacedDice)
 		DicePlaced++;
 	}
 	
-	// Updating dices on table
 	for (int i = 0; i < 6; i++)
 	{
 		Enemy->PlayerDicesOnTable[i] = Player->PlayerDicesOnTable[i];
@@ -100,7 +94,6 @@ void UBrawlManager::DicesPlacementSequence(ABaseDice* PlacedDice)
 		}
 	}
 	
-	// Swapping order for next dice placement
 	if (SwapPoints.Contains(DicePlaced))
 	{
 		TurnManager->SwapOrder();
@@ -117,7 +110,6 @@ void UBrawlManager::DicesPlacementSequence(ABaseDice* PlacedDice)
 		}
 	}
 	
-	// Checking if all dices are placed on table
 	if (Player->PlayerDicesOnTable[5] && Enemy->EnemyDicesOnTable[5])
 	{
 		SetPlacement(false, false, true);
@@ -134,7 +126,6 @@ void UBrawlManager::SetPlacement(bool CanPlayerChoose, bool CanEnemyChoose, bool
 	Player->Set_bCanMove(CanPlayerMove);
 }
 
-// Checking brawl results
 void UBrawlManager::CheckingResults()
 {
 	if (CurrentState != ECurrentState::ScoreResolve) return;
@@ -147,7 +138,6 @@ void UBrawlManager::CheckingResults()
 		ABaseDice* EnemyDice = Enemy->EnemyDicesOnTable[i];
 		if (PlayerDice && EnemyDice)
 		{
-			// Checking if dices are visible and if they have fang tag for result calculation
 			if (PlayerDice->bIsVisible && EnemyDice->bIsVisible)
 			{
 				static const FName Fang(TEXT("Fang"));
@@ -168,13 +158,12 @@ void UBrawlManager::CheckingResults()
 		}
 	}
 
-	// Counting points for player and enemy
 	int PlayerPoints = 0;
 	int EnemyPoints = 0;
 
 	for (int i : FinalResults)
 	{
-		if (i <= -2 ) EnemyPoints++;
+		if (i <= -2) EnemyPoints++;
 		else if (i >= 2) PlayerPoints++;
 	}
 	if (PlayerPoints > EnemyPoints) BigPlayerPoints++;
@@ -184,38 +173,34 @@ void UBrawlManager::CheckingResults()
 	bIsNewEnemy = false;
 }
 
-// Resetting settings for next brawl
 void UBrawlManager::ResetSettings()
 {
 	if (!Enemy) return;
 	Player->Set_bPlayerDiceRolled(false);
 	Enemy->bEnemyDiceRolled = false;
 	
-	// Destroying fangs on table
 	Player->DestroyFangsOnTable();
 	Enemy->DestroyFangsOnTable();
 	DicePlaced = 0;
 }
 
-// Resetting dices position
 void UBrawlManager::ResetDicesPosition()
 {
 	if (!Enemy) return;
 	CurrentState = ECurrentState::Waiting;
 	Player->MoveCamera(ECamPosition::Bottom);
+	
 	Player->ResetDicesPosition();
 	for (int& Result : PlayerResults) Result = 0;
 	Enemy->ResetDicesPosition();
 	for (int& Result : EnemyResults) Result = 0;
 }
 
-// Resetting points after brawl
 void UBrawlManager::ResetPoints()
 {
 	if (!Player || !Enemy) return;
 	if (BigPlayerPoints != 3 && BigEnemyPoints != 3) return;
 
-	// Player won
 	if (BigPlayerPoints >= 3)
 	{
 		Enemy->GetHit();
@@ -223,7 +208,6 @@ void UBrawlManager::ResetPoints()
 		
 		GameState->GetWaiterManager()->RandWaiterServe();
 	}
-	// Enemy won
 	else if (BigEnemyPoints >= 3)
 	{	
 		Player->GetHit();
