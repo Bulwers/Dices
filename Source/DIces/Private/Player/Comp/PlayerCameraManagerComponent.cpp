@@ -15,17 +15,19 @@ void UPlayerCameraManagerComponent::BeginPlay()
 
 void UPlayerCameraManagerComponent::Initialize(USceneComponent* InCameraPosition, float InMoveSpeed, float InMoveTime)
 {
+	if (!IsValid(InCameraPosition)) return;
+	
 	CameraPosition = InCameraPosition;
 	CameraPos = CameraPosition->GetComponentLocation();
 	CameraRot = CameraPosition->GetComponentRotation();
 	MoveSpeed = InMoveSpeed;
-	MoveTime = InMoveTime;
+	MoveSteps = InMoveTime;
 	ECurrentCamPos = ECamPosition::Bottom;
 }
 
 void UPlayerCameraManagerComponent::MoveCamera(ECamPosition Direction)
 {
-	CurrentMoveTime = 0;
+	CurrentMoveSteps = 0;
 	switch (Direction)
 	{
 	case ECamPosition::Top:
@@ -63,7 +65,7 @@ void UPlayerCameraManagerComponent::MoveTop()
 	CameraPosition->SetWorldRotation(FMath::RInterpTo(CameraPosition->GetComponentRotation(), NewRotation, GetWorld()->GetDeltaSeconds(), MoveSpeed));
 	FVector NewLocation = CameraPos + FVector(140, 0, 0);
 	CameraPosition->SetWorldLocation(FMath::VInterpTo(CameraPosition->GetComponentLocation(), NewLocation, GetWorld()->GetDeltaSeconds(), MoveSpeed));
-	if (++CurrentMoveTime >= MoveTime)
+	if (++CurrentMoveSteps >= MoveSteps)
 		GetWorld()->GetTimerManager().ClearTimer(MoveTimerHandle);
 }
 
@@ -71,7 +73,7 @@ void UPlayerCameraManagerComponent::MoveBottom()
 {
 	CameraPosition->SetWorldRotation(FMath::RInterpTo(CameraPosition->GetComponentRotation(), CameraRot, GetWorld()->GetDeltaSeconds(), MoveSpeed));
 	CameraPosition->SetWorldLocation(FMath::VInterpTo(CameraPosition->GetComponentLocation(), CameraPos, GetWorld()->GetDeltaSeconds(), MoveSpeed));
-	if (++CurrentMoveTime >= MoveTime)
+	if (++CurrentMoveSteps >= MoveSteps)
 		GetWorld()->GetTimerManager().ClearTimer(MoveTimerHandle);
 }
 
@@ -81,7 +83,7 @@ void UPlayerCameraManagerComponent::MoveLeft()
 	CameraPosition->SetWorldRotation(FMath::RInterpTo(CameraPosition->GetComponentRotation(), NewRotation, GetWorld()->GetDeltaSeconds(), MoveSpeed));
 	FVector NewLocation = CameraPos + FVector(0, 0, -20);
 	CameraPosition->SetWorldLocation(FMath::VInterpTo(CameraPosition->GetComponentLocation(), NewLocation, GetWorld()->GetDeltaSeconds(), MoveSpeed));
-	if (++CurrentMoveTime >= MoveTime)
+	if (++CurrentMoveSteps >= MoveSteps)
 		GetWorld()->GetTimerManager().ClearTimer(MoveTimerHandle);
 }
 
@@ -91,7 +93,7 @@ void UPlayerCameraManagerComponent::MoveRight()
 	CameraPosition->SetWorldRotation(FMath::RInterpTo(CameraPosition->GetComponentRotation(), NewRotation, GetWorld()->GetDeltaSeconds(), MoveSpeed));
 	FVector NewLocation = CameraPos + FVector(40, 30, 0);
 	CameraPosition->SetWorldLocation(FMath::VInterpTo(CameraPosition->GetComponentLocation(), NewLocation, GetWorld()->GetDeltaSeconds(), MoveSpeed));
-	if (++CurrentMoveTime >= MoveTime)
+	if (++CurrentMoveSteps >= MoveSteps)
 		GetWorld()->GetTimerManager().ClearTimer(MoveTimerHandle);
 }
 
@@ -101,6 +103,6 @@ void UPlayerCameraManagerComponent::MoveOnWaiter()
 	CameraPosition->SetWorldRotation(FMath::RInterpTo(CameraPosition->GetComponentRotation(), NewRotation, GetWorld()->GetDeltaSeconds(), MoveSpeed));
 	FVector NewLocation = CameraPos + FVector(0, -20, 0);
 	CameraPosition->SetWorldLocation(FMath::VInterpTo(CameraPosition->GetComponentLocation(), NewLocation, GetWorld()->GetDeltaSeconds(), MoveSpeed));
-	if (++CurrentMoveTime >= MoveTime)
+	if (++CurrentMoveSteps >= MoveSteps)
 		GetWorld()->GetTimerManager().ClearTimer(MoveTimerHandle);
 }

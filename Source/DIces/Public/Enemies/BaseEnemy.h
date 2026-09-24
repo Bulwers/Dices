@@ -22,11 +22,11 @@ public:
 	FDicePlacement OnDicePlacement;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category= "Enemy|Dices")
-	TArray<ABaseDice*> EnemyDicesOnHand;
+	TArray<TObjectPtr<ABaseDice>> EnemyDicesOnHand;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category= "Enemy|Dices")
-	TArray<ABaseDice*> EnemyDicesOnTable;
+	TArray<TObjectPtr<ABaseDice>> EnemyDicesOnTable;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Player|Dices")
-	TArray<ABaseDice*> PlayerDicesOnTable;
+	TArray<TObjectPtr<ABaseDice>> PlayerDicesOnTable;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category= "Enemy|Dices")
 	TArray<FVector> DicesSpots;
@@ -34,7 +34,7 @@ public:
 	UFUNCTION()
 	void GetHit() const;
 	UFUNCTION()
-	void DestroyFangsOnTable();
+	void DestroyFangsOnTable();	
 	
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category= "Enemy|Booleans")
 	bool bEnemyCanChooseDiceForBrawl;
@@ -57,23 +57,23 @@ protected:
 	virtual void BeginPlay() override;
 	
 	UPROPERTY(EditDefaultsOnly)
-	class UBehaviorTree* BTEnemy;
+	TObjectPtr<class UBehaviorTree> BTEnemy;
 
 	UPROPERTY(EditDefaultsOnly, Category= "Enemy|Dices")
 	int EnemyDicesNum;
 	
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere, Category = "Player")
-	class ABasePlayer* Player;
+	TObjectPtr<class ABasePlayer> Player;
 	
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Dialogue")
-	class ADialogueManager* DialogueManager;
+	TObjectPtr<class ADialogueManager> DialogueManager;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Components")
-	class UHealthComponent* EnemyHealthComp;
+	TObjectPtr<class UHealthComponent> EnemyHealthComp;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Enemy|Components")
-	class UEnemyDiceComponent* EnemyDiceComp;
+	TObjectPtr<class UEnemyDiceComponent> EnemyDiceComp;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Enemy|Components")
-	class UEnemyDecisionComponent* EnemyDecisionComp;
+	TObjectPtr<class UEnemyDecisionComponent> EnemyDecisionComp;
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Components")
 	TSubclassOf<UEnemyDecisionComponent> DecisionComponentToSpawn;
 	UPROPERTY(EditDefaultsOnly, Category = "Enemy|Components|Strategy")
@@ -82,7 +82,7 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	bool bWasTableHit;
 	UPROPERTY(VisibleAnywhere)
-	int TableHitCount = 0;
+	int32 TableHitCount = 0;
 	
 	UFUNCTION(BlueprintCallable)
 	virtual void PlaceDiceOnTable();
@@ -101,5 +101,4 @@ public:
 	
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 };

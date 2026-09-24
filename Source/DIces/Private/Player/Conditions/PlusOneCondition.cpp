@@ -2,6 +2,7 @@
 
 
 #include "Player/Conditions/PlusOneCondition.h"
+#include "Player/BasePlayer.h"
 
 
 void UPlusOneCondition::BeginPlay()
@@ -16,12 +17,11 @@ void UPlusOneCondition::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (ActualTurnCount - StartTurnCount >= 3)
+	if (ActualTurnCount - StartTurnCount >= TurnLifetime)
 	{
-
 		DestroyComponent();
+		return;
 	}
-	// Turn Reset
 	if (ActualTurnCount - NewTurnCount >= 1)
 	{
 		++NewTurnCount;

@@ -35,10 +35,10 @@ public:
 	
 private:
 	UPROPERTY()
-	UDialogueData* CurrentDialogue;
+	TObjectPtr<UDialogueData> CurrentDialogue;
 	
 	UPROPERTY()
-	UDialogueWidget* DialogueWidget;
+	TObjectPtr<UDialogueWidget> DialogueWidget;
 	
 	int32 CurrentLineIndex;
 	
@@ -49,6 +49,5 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	virtual void Tick(float DeltaTime) override;
 
 };

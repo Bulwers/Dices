@@ -55,16 +55,20 @@ void UDarkvisionComponent::SwapDices(
 	if (!bIsCandleExtinguished) return;
 	if (bIsSwapped) return;
 	
-	const int Size = EnemyDicesOnTable.Num();
-	for (int A = 0; A < Size; A++)
+	const int32 Size = EnemyDicesOnTable.Num();
+	
+	for (int32 A = 0; A < Size; A++)
 	{
+		if (!PlayerDicesOnTable.IsValidIndex(A) || !EnemyDicesOnTable.IsValidIndex(A)) continue;
 		if (!PlayerDicesOnTable[A] || !EnemyDicesOnTable[A]) continue;
 		//if (EnemyDicesOnTable[A]->Sum() - PlayerDicesOnTable[A]->Sum() > 1) continue;
 	
-		for (int B = 0; B < Size; B++)
+		for (int32 B = 0; B < Size; B++)
 		{
 			if (A == B) continue;
+			if (!PlayerDicesOnTable.IsValidIndex(B) || !EnemyDicesOnTable.IsValidIndex(B)) continue;
 			if (!EnemyDicesOnTable[B] || !PlayerDicesOnTable[B]) continue;
+			
 			if (EnemyDicesOnTable[A]->Sum() == EnemyDicesOnTable[B]->Sum()) continue;
 			if (PlayerDicesOnTable[A]->Sum() == PlayerDicesOnTable[B]->Sum()) continue;
 			UE_LOG(LogTemp, Warning, TEXT("A=%d B=%d"), A, B);
@@ -78,8 +82,7 @@ void UDarkvisionComponent::SwapDices(
 			
 			int32 PlayerPointsBefore = 0;
 			int32 EnemyPointsBefore = 0;
-			
-			for (int i : ResultsBefore)
+			for (const int32 i : ResultsBefore)
 			{
 				if (i <= -2) PlayerPointsBefore++;
 				else if (i >= 2) EnemyPointsBefore++;
@@ -87,8 +90,7 @@ void UDarkvisionComponent::SwapDices(
 			
 			int32 PlayerPointsAfter = 0;
 			int32 EnemyPointsAfter = 0;
-			
-			for (int i : ResultsAfter)
+			for (const int32 i : ResultsAfter)
 			{
 				if (i <= -2) PlayerPointsAfter++;
 				else if (i >= 2) EnemyPointsAfter++;

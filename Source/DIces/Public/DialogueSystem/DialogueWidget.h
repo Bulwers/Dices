@@ -22,5 +22,5 @@ public:
 	void SetDialogueManager(ADialogueManager* Manager) { DialogueManager = Manager; }
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Dialogue")
-	ADialogueManager* DialogueManager;
+	TObjectPtr<ADialogueManager> DialogueManager;
 };

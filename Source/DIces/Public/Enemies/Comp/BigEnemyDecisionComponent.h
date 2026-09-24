@@ -14,8 +14,12 @@ class DICES_API UBigEnemyDecisionComponent : public UEnemyDecisionComponent
 	
 protected:
 	
+	virtual int32 FindSlotToPlaceDice(
+		const TArray<ABaseDice*>& PlayerDicesOnTable, 
+		const TArray<ABaseDice*>& EnemyDicesOnTable);
+	
 	virtual ABaseDice* ChoosingDiceToPutOnTable(
 		const TArray<ABaseDice*>& PlayerDicesOnTable,
 		const TArray<ABaseDice*>& EnemyDices,
-		const int Slot) override;
+		const int32 Slot) override;
 };

@@ -36,13 +36,14 @@ FRotator UEnemyDiceComponent::RandSpawnRotationForDice()
 	return FRotator(Rot_X, Rot_Y, Rot_Z);
 }
 
-void UEnemyDiceComponent::SpawnDices(TArray<ABaseDice*>& EnemyDices, TArray<TSubclassOf<ABaseDice>> DicesToSpawn, ABaseEnemy* Owner)
+void UEnemyDiceComponent::SpawnDices(TArray<TObjectPtr<ABaseDice>>& EnemyDices, TArray<TSubclassOf<ABaseDice>> DicesToSpawn, ABaseEnemy* Owner)
 {
 	for (int i = 0; i < EnemyDices.Num(); i++)
 	{
 		if (!EnemyDices[i] && DicesToSpawn.IsValidIndex(i))
 		{
 			EnemyDices[i] = GetWorld()->SpawnActor<ABaseDice>(DicesToSpawn[i], RandSpawnLocationForDice(), RandSpawnRotationForDice());
+			if (!EnemyDices[i]) continue;
 			EnemyDices[i]->SetActorLabel(TEXT("EnemyDice"), false);
 			EnemyDices[i]->OnDiceStopped.BindLambda([this, Owner](){OnSingleDiceStopped(Owner);});
 		}

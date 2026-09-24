@@ -16,9 +16,9 @@ public:
 	UFUNCTION()
 	void InitNameAndData(FName Name);
 	UFUNCTION(BlueprintCallable)
-	virtual int ResultsScore(const int PlayerResult, const int EnemyResult);
+	virtual int32 ResultsScore(const int32 PlayerResult, const int32 EnemyResult);
 	UFUNCTION(BlueprintCallable)
-	virtual int BlindScore(const int EnemyResult);
+	virtual int32 BlindScore(const int32 EnemyResult);
 	
 	
 private:
@@ -26,6 +26,6 @@ private:
 	UPROPERTY()
 	FName StrategyName;
 	UPROPERTY()
-	UDataTable* StrategyScoreDataTable;
-	FStrategyScoreData* Data;
+	TObjectPtr<UDataTable> StrategyScoreDataTable;
+	FStrategyScoreData* Data = nullptr;
 };

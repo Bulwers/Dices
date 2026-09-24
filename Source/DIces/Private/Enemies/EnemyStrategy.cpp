@@ -6,17 +6,25 @@
 void UEnemyStrategy::InitNameAndData(FName Name)
 {
 	StrategyName = Name;
-	StrategyScoreDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Dynamic/Enemies/StrategyTable.StrategyTable"));
+	StrategyScoreDataTable = LoadObject<UDataTable>(nullptr,TEXT("/Game/Dynamic/Enemies/StrategyTable.StrategyTable"));
+	if (!IsValid(StrategyScoreDataTable))
+	{
+		UE_LOG(LogTemp, Error, TEXT("StrategyScoreDataTable not found"));
+	}
 	Data = StrategyScoreDataTable->FindRow<FStrategyScoreData>(StrategyName, TEXT(""));
+	if (!Data)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Strategy %s not found"), *StrategyName.ToString());
+	}
 }
 
-int UEnemyStrategy::ResultsScore(const int PlayerResult, const int EnemyResult)
+int UEnemyStrategy::ResultsScore(const int32 PlayerResult, const int32 EnemyResult)
 {
-	if (!StrategyScoreDataTable) return 0;
+	if (!Data) return 0;
 	
-	int Difference =  FMath::Clamp(EnemyResult - PlayerResult, -5, 5);
+	const int32 Difference =  FMath::Clamp(EnemyResult - PlayerResult, -5, 5);
 	
-	switch (FMath::Clamp(Difference, -5, 5))
+	switch (Difference)
 	{
 	case  5: return Data->Diff_Plus_5;
 	case  4: return Data->Diff_Plus_4;
@@ -33,8 +41,10 @@ int UEnemyStrategy::ResultsScore(const int PlayerResult, const int EnemyResult)
 	}
 }
 
-int UEnemyStrategy::BlindScore(const int EnemyResult)
+int UEnemyStrategy::BlindScore(const int32 EnemyResult)
 {
+	if (!Data) return 0;
+	
 	switch (EnemyResult)
 	{
 	case 6: return Data->Blind_6;

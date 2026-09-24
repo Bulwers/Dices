@@ -23,16 +23,16 @@ public:
 	FDismissDelegate DismissDelegate;
 	
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-	UButton* EndTurnButton;
+	TObjectPtr<UButton> EndTurnButton;
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
-	UButton* DismissButton;
+	TObjectPtr<UButton> DismissButton;
 	
 	UPROPERTY(BlueprintReadOnly)
-	class AGameStateBaseClass* GameState;
+	TObjectPtr<class AGameStateBaseClass> GameState;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	class ABasePlayer* Player;
+	TObjectPtr<class ABasePlayer> Player;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	class AWaiter* Waiter;
+	TObjectPtr<class AWaiter> Waiter;
 	
 	UFUNCTION(BlueprintCallable)
 	void EndTurn() { EndTurnDelegate.Broadcast(); };

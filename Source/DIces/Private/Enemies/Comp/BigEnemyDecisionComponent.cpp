@@ -5,33 +5,79 @@
 #include "Enemies/EnemyStrategy.h"
 
 
+int32 UBigEnemyDecisionComponent::FindSlotToPlaceDice(
+	const TArray<ABaseDice*>& PlayerDicesOnTable, 
+	const TArray<ABaseDice*>& EnemyDicesOnTable)
+{
+	for (const int32 i : { 0, 2, 4 })
+	{
+		if (PlayerDicesOnTable[i] == nullptr &&
+			PlayerDicesOnTable[i + 1] == nullptr &&
+			EnemyDicesOnTable[i] == nullptr &&
+			EnemyDicesOnTable[i + 1] == nullptr)
+		{
+			EEnemyPlacementDecision =
+				EDicePlacementDecision::BlindPlacement;
+
+			return i;
+		}
+
+		if ((PlayerDicesOnTable[i] != nullptr ||
+			 PlayerDicesOnTable[i + 1] != nullptr) &&
+			EnemyDicesOnTable[i] == nullptr &&
+			EnemyDicesOnTable[i + 1] == nullptr)
+		{
+			EEnemyPlacementDecision =
+				EDicePlacementDecision::KnowingPlacement;
+
+			return i;
+		}
+	}
+
+	return INDEX_NONE;
+}
+
 ABaseDice* UBigEnemyDecisionComponent::ChoosingDiceToPutOnTable(
 	const TArray<ABaseDice*>& PlayerDicesOnTable, 
 	const TArray<ABaseDice*>& EnemyDices, 
-	const int Slot)
+	const int32 Slot)
 {
-	const int PlayerFirst = PlayerDicesOnTable[Slot] ? PlayerDicesOnTable[Slot]->Result() : 0;
-	const int PlayerSecond = (Slot + 1 < PlayerDicesOnTable.Num() && PlayerDicesOnTable[Slot + 1]) ? PlayerDicesOnTable[Slot + 1]->Result() : 0;
-	const int MaxResult = FMath::Max(PlayerFirst, PlayerSecond);
-	
-	int BestResultScore = -1;
-	int BestResultIndex = -1;
-	
-	TArray<int> EnemyAvailableDices;
-	for (int i = 0; i < EnemyDices.Num(); i++)
+	if (!IsValid(Strategy))
 	{
-		if (IsValid(EnemyDices[i]) && !EnemyDices[i]->bIsEnemyChoosen)
+		return nullptr;
+	}
+	
+	TArray<int32> EnemyAvailableDices;
+	for (int32 i = 0; i < EnemyDices.Num(); i++)
+	{
+		if (IsValid(EnemyDices[i]) && !EnemyDices[i]->bIsEnemyChosen)
 		{
 			EnemyAvailableDices.Add(i);
 		}
 	}
+	if (EnemyAvailableDices.IsEmpty())
+	{
+		return nullptr;
+	}
+	
+	const int32 PlayerFirst = PlayerDicesOnTable[Slot] ? PlayerDicesOnTable[Slot]->Result() : 0;
+	const int32 PlayerSecond = (Slot + 1 < PlayerDicesOnTable.Num() && PlayerDicesOnTable[Slot + 1]) ? PlayerDicesOnTable[Slot + 1]->Result() : 0;
+	const int32 MaxResult = FMath::Max(PlayerFirst, PlayerSecond);
+	
+	int32 BestResultScore = -1;
+	int32 BestResultIndex = INDEX_NONE;
 	
 	switch (EEnemyPlacementDecision)
 	{
 	case EDicePlacementDecision::KnowingPlacement:
-		for (const int Index : EnemyAvailableDices)
+		if (!PlayerDicesOnTable.IsValidIndex(Slot) || 
+			!IsValid(PlayerDicesOnTable[Slot]))
 		{
-			int Score = Strategy->ResultsScore(MaxResult, EnemyDices[Index]->Result());
+			return nullptr;
+		}
+		for (const int32 Index : EnemyAvailableDices)
+		{
+			int32 Score = Strategy->ResultsScore(MaxResult, EnemyDices[Index]->Result());
 			if (Score > BestResultScore)
 			{
 				BestResultScore = Score;
@@ -40,9 +86,9 @@ ABaseDice* UBigEnemyDecisionComponent::ChoosingDiceToPutOnTable(
 		}
 		break;
 	case EDicePlacementDecision::BlindPlacement:
-		for (const int Index : EnemyAvailableDices)
+		for (const int32 Index : EnemyAvailableDices)
 		{
-			int Score = Strategy->BlindScore(EnemyDices[Index]->Result());
+			int32 Score = Strategy->BlindScore(EnemyDices[Index]->Result());
 			if (Score > BestResultScore)
 			{
 				BestResultScore = Score;
@@ -52,9 +98,9 @@ ABaseDice* UBigEnemyDecisionComponent::ChoosingDiceToPutOnTable(
 		break;
 	}
 
-	if (BestResultIndex != -1)
+	if (BestResultIndex == INDEX_NONE)
 	{
-		return EnemyDices[BestResultIndex];
+		return nullptr;
 	}
-	return EnemyDices[EnemyAvailableDices[0]];
+	return EnemyDices[BestResultIndex];
 }

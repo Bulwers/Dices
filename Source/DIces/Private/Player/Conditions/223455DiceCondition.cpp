@@ -1,7 +1,8 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Player/Conditions/223455DiceCondition.h"
+#include "Player/BasePlayer.h"
+#include "Dices/BaseDice.h"
 
 void U223455DiceCondition::BeginPlay()
 {
@@ -9,6 +10,11 @@ void U223455DiceCondition::BeginPlay()
 
 	TempDiceToSpawn = LoadClass<ABaseDice>(nullptr, TEXT("/Game/Dices/BP_223455Dice.BP_223455Dice_C"));
 
+	if (!TempDiceToSpawn)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to load Dice class / 223455DiceCondition"));
+		return;
+	}
 	PlayerDices.Init(nullptr, 6);
 	TempDices.Init(nullptr, 6);
 
@@ -19,11 +25,11 @@ void U223455DiceCondition::TickComponent(float DeltaTime, ELevelTick TickType, F
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// Lifetime
-	if (ActualTurnCount - StartTurnCount >= 2)
+	if (ActualTurnCount - StartTurnCount >= TurnLifetime)
 	{
-		for (int i = 0; i < 6; i++)
+		for (int32 i = 0 ; i < Player->PlayerDicesOnHand.Num(); i++)
 		{
+			if (!IsValid(PlayerDices[i])) continue;
 			if (Player->PlayerDicesOnHand[i])
 			{
 				Player->PlayerDicesOnHand[i] = PlayerDices[i];
@@ -31,8 +37,11 @@ void U223455DiceCondition::TickComponent(float DeltaTime, ELevelTick TickType, F
 				Player->PlayerDicesOnHand[i]->SetActorHiddenInGame(false);
 				Player->PlayerDicesOnHand[i]->DiceMesh->SetSimulatePhysics(true);
 				Player->PlayerDicesOnHand[i]->SetActorEnableCollision(true);
-
-				TempDices[i]->Destroy();
+				
+				if (IsValid(TempDices[i]))
+				{
+					TempDices[i]->Destroy();
+				}
 			}
 		}
 		DestroyComponent();
@@ -41,7 +50,7 @@ void U223455DiceCondition::TickComponent(float DeltaTime, ELevelTick TickType, F
 
 void U223455DiceCondition::DrinkEffect()
 {
-	for (int i = 0; i < 6; i++)
+	for (int32 i = 0 ; i < Player->PlayerDicesOnHand.Num(); i++)
 	{
 		if (Player->PlayerDicesOnHand[i])
 		{
@@ -52,9 +61,13 @@ void U223455DiceCondition::DrinkEffect()
 			Player->PlayerDicesOnHand[i]->SetActorEnableCollision(false);
 
 			TempDices[i] = GetWorld()->SpawnActor<ABaseDice>(TempDiceToSpawn, Player->PlayerDicesOnHand[i]->GetActorLocation(), Player->PlayerDicesOnHand[i]->GetActorRotation());
-
+			if (!IsValid(TempDices[i]))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Failed to spawn TempDice / 223455DiceCondition"));
+			}
+			
 			Player->PlayerDicesOnHand[i] = TempDices[i];
-			Player->PlayerDicesOnHand[i]->bIsChoosen = true;
+			Player->PlayerDicesOnHand[i]->bIsChosen = true;
 			Player->PlayerDicesOnHand[i]->bIsPlayer = true;
 		}
 	}

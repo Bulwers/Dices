@@ -41,11 +41,11 @@ public:
 	TArray<int> TestResults;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TArray<ABaseDice*> PlayerDices;
+	TArray<TObjectPtr<ABaseDice>> PlayerDices;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TArray<ABaseDice*> PlayerDicesOnHand;
+	TArray<TObjectPtr<ABaseDice>> PlayerDicesOnHand;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TArray<ABaseDice*> PlayerDicesOnTable;
+	TArray<TObjectPtr<ABaseDice>> PlayerDicesOnTable;
 	
 	UFUNCTION()
 	void ResetDicesPosition();
@@ -57,11 +57,11 @@ public:
 	TArray<bool> bIsDrinkSpotTaken;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UHealthComponent* HealthComp;
+	TObjectPtr<class UHealthComponent> HealthComp;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UPlayerCameraManagerComponent* CameraComp;
+	TObjectPtr<class UPlayerCameraManagerComponent> CameraComp;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UPlayerDiceManagerComponent* DiceComp;
+	TObjectPtr<class UPlayerDiceManagerComponent> DiceComp;
 
 	UFUNCTION()
 	void GetHit() const;
@@ -69,7 +69,7 @@ public:
 	int GetHealth() const;
 
 	UPROPERTY(VisibleAnywhere)
-	TArray<class UBaseCondition*> DrinkConditions;
+	TArray<TObjectPtr<class UBaseCondition>> DrinkConditions;
 
 	UFUNCTION(BlueprintCallable)
 	void FangSpawn();
@@ -87,7 +87,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	int GetGoldQuantity();
 
-	bool bWasTableHit;
+	bool bWasTableHit = false;
 	int TableHitCount = 0;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
@@ -111,12 +111,12 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UCapsuleComponent* CapsuleComponent;
+	TObjectPtr<class UCapsuleComponent> CapsuleComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UCameraComponent* Camera;
+	TObjectPtr<class UCameraComponent> Camera;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	USceneComponent* CameraPosition;
-	APlayerController* Controller;
+	TObjectPtr<USceneComponent> CameraPosition;
+	TWeakObjectPtr<APlayerController> Controller;
 
 private:
 	
@@ -167,6 +167,5 @@ private:
 	FRotator RandRot(FRotator Rot, int Range);
 
 public:
-	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 };

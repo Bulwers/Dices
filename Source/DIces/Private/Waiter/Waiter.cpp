@@ -3,15 +3,15 @@
 #include "Waiter/Waiter.h"
 #include "Components/CapsuleComponent.h"
 #include "Game/GameStateBaseClass.h"
-#include "Algo/RandomShuffle.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/BasePlayer.h"
+#include "Drinks/BaseDrink.h"
 #include "Game/GameManagers/BrawlManager.h"
 #include "Game/GameManagers/WaiterManager.h"
 
 AWaiter::AWaiter()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 	
 	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule"));
 	RootComponent = CapsuleComponent;
@@ -19,15 +19,13 @@ AWaiter::AWaiter()
 	PlatePosition = CreateDefaultSubobject<USceneComponent>(TEXT("Plate"));
 	PlatePosition->SetupAttachment(CapsuleComponent);
 
-	DrinkSpot_1 = CreateDefaultSubobject<USceneComponent>(TEXT("Spot_1"));
-	DrinkSpot_1->SetupAttachment(PlatePosition);
-
-	DrinkSpot_2 = CreateDefaultSubobject<USceneComponent>(TEXT("Spot_2"));
-	DrinkSpot_2->SetupAttachment(PlatePosition);
-
-	DrinkSpot_3 = CreateDefaultSubobject<USceneComponent>(TEXT("Spot_3"));
-	DrinkSpot_3->SetupAttachment(PlatePosition);
+	for (int32 i = 0; i < 3; i++)
+	{
+		DrinkSpots.Add(CreateDefaultSubobject<USceneComponent>(FName(*FString::Printf(TEXT("Spot_%d"), i + 1))));
+		DrinkSpots[i]->SetupAttachment(PlatePosition);
+	}
 	bCanDismiss = false;
+	
 }
 
 void AWaiter::BeginPlay()
@@ -35,60 +33,45 @@ void AWaiter::BeginPlay()
 	Super::BeginPlay();
 
 	GameState = Cast<AGameStateBaseClass>(UGameplayStatics::GetGameState(GetWorld()));
-	if (GameState) GameState->GetWaiterManager()->WaiterCall.BindUObject(this, &AWaiter::DrinkOffer);
+	if (!IsValid(GameState))
+	{
+		UE_LOG(LogTemp, Error, TEXT("GameState not found / AWaiter::BeginPlay()"));
+	}
 	
+	GameState->GetWaiterManager()->WaiterCall.BindUObject(this, &AWaiter::DrinkOffer);
 	SetActorLocationAndRotation(StartLoc, StartRot, false, nullptr, ETeleportType::None);
-	
 	DrinkTier = GameState->GetEnemiesCount();
-}
-
-void AWaiter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
-void AWaiter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
 void AWaiter::SetStartingLocAndRot()
 {
 	SetActorLocationAndRotation(StartLoc, StartRot, false, nullptr, ETeleportType::None);
-	if (Drink_1)
+	
+	for (TObjectPtr<ABaseDrink>& Drink : ActiveDrinks)
 	{
-		Drink_1->DrinkTaken.Unbind();
-		if (!Drink_1->bIsPlayer)
-		{
-			Drink_1->Destroy();
-		}
-		Drink_1 = nullptr;
+		if (!Drink) continue;
+		
+		Drink->DrinkTaken.Unbind();	
+		if (!Drink->bIsPlayer) Drink->Destroy();
+		Drink = nullptr;
 	}
-	if (Drink_2)
+	ActiveDrinks.Empty();
+	
+	if (GameState)
 	{
-		Drink_2->DrinkTaken.Unbind();
-		if (!Drink_2->bIsPlayer)
-		{
-			Drink_2->Destroy();
-		}
-		Drink_2 = nullptr;
+		GameState->GetPlayer()->MoveCamera(ECamPosition::Bottom);
+		GameState->GetBrawlManager()->SetWaiterState();
 	}
-	if (Drink_3)
-	{
-		Drink_3->DrinkTaken.Unbind();
-		if (!Drink_3->bIsPlayer)
-		{
-			Drink_3->Destroy();
-		}
-		Drink_3 = nullptr;
-	}
-	GameState->GetPlayer()->MoveCamera(ECamPosition::Bottom);
-	GameState->GetBrawlManager()->SetWaiterState();
 	bCanDismiss = false;
 }
 
 void AWaiter::DrinkOffer()
 { 
+	if (!IsValid(GameState))
+	{
+		UE_LOG(LogTemp, Error, TEXT("GameState not found / AWaiter::DrinkOffer()"));
+		return;
+	}
 	UE_LOG(LogTemp, Warning, TEXT("Waiter Offering Drinks"));
 	SetActorLocationAndRotation(ServeLoc, ServeRot, false, nullptr, ETeleportType::None);
 	GameState->GetPlayer()->MoveCamera(ECamPosition::Waiter);
@@ -96,95 +79,125 @@ void AWaiter::DrinkOffer()
 
 	DrinkTier = GameState->GetEnemiesCount();
 
-	FVector2D RandDrinksLvl_1 = RandDrinks(DrinksLvl_1);
-	FVector2D RandDrinksLvl_2 = RandDrinks(DrinksLvl_2);
-	FVector2D RandDrinksLvl_3 = RandDrinks(DrinksLvl_3);
-
-	int PercentChance = FMath::RandRange(0, 100);
+	TArray<int32> RandDrinksLvl_1 = RandDrinks(DrinksLvl_1);
+	TArray<int32> RandDrinksLvl_2 = RandDrinks(DrinksLvl_2);
+	TArray<int32> RandDrinksLvl_3 = RandDrinks(DrinksLvl_3);
+	
+	int32 PercentChance = FMath::RandRange(0, 100);
 
 	if (DrinkTier >= 8)
 	{
 		if (PercentChance > ChanceOfLvl_123)
 		{
-			DrinkSpawn(RandDrinksLvl_1.X, RandDrinksLvl_2.X, RandDrinksLvl_3.X);
+			SpawnSelectedDrinks({RandDrinksLvl_1[0], RandDrinksLvl_2[0], RandDrinksLvl_3[0]});
 		}
 		else if (PercentChance > ChanceOfLvl_122)
 		{
-			DrinkSpawn(RandDrinksLvl_1.X, RandDrinksLvl_2.X, RandDrinksLvl_2.Y);
+			SpawnSelectedDrinks({RandDrinksLvl_1[0], RandDrinksLvl_2[0], RandDrinksLvl_2[1]});
 		}
 		else if (PercentChance > ChanceOfLvl_113)
 		{
-			DrinkSpawn(RandDrinksLvl_1.X, RandDrinksLvl_1.Y, RandDrinksLvl_3.X);
+			SpawnSelectedDrinks({RandDrinksLvl_1[0], RandDrinksLvl_1[1], RandDrinksLvl_3[0]});
 		}
 		else
 		{
-			DrinkSpawn(RandDrinksLvl_1.X, RandDrinksLvl_1.Y, RandDrinksLvl_2.X);
+			SpawnSelectedDrinks({RandDrinksLvl_1[0], RandDrinksLvl_1[0], RandDrinksLvl_2[0]});
 		}
 	}
 	else if (DrinkTier == 5)
 	{
 		if (PercentChance > ChanceOfLvl_12)
 		{
-			DrinkSpawn(RandDrinksLvl_1.X, RandDrinksLvl_2.X, -1);
+			SpawnSelectedDrinks({RandDrinksLvl_1[0], RandDrinksLvl_2[0]});
 		}
 		else
 		{
-			DrinkSpawn(RandDrinksLvl_1.X, RandDrinksLvl_1.Y, -1);
+			SpawnSelectedDrinks({RandDrinksLvl_1[0], RandDrinksLvl_1[1]});
 		}
 	}
 	else
 	{
-		DrinkSpawn(RandDrinksLvl_1.X, -1, -1);
+		SpawnSelectedDrinks({RandDrinksLvl_1[0]});
 	}
 	
 }
 
-void AWaiter::DrinkSpawn(int DrinkToSpawn_1, int DrinkToSpawn_2, int DrinkToSpawn_3)
+void AWaiter::SpawnSelectedDrinks(const TArray<int32>& DrinksIndexes)
 {
-	if (DrinkToSpawn_2 == -1 && DrinkToSpawn_3 == -1)
-	{
-		Drink_1 = GetWorld()->SpawnActor<ABaseDrink>(DrinkToSpawn[DrinkToSpawn_1],
-			DrinkSpot_2->GetComponentLocation(), DrinkSpot_2->GetComponentRotation());
-		Drink_1->SetCanBeClicked();
-		Drink_1->DrinkTaken.BindUObject(this, &AWaiter::SetStartingLocAndRot);
-	}
-	else if (DrinkToSpawn_3 == -1)
-	{
-		Drink_1 = GetWorld()->SpawnActor<ABaseDrink>(DrinkToSpawn[DrinkToSpawn_1],
-			DrinkSpot_1->GetComponentLocation(), DrinkSpot_1->GetComponentRotation());
-		Drink_1->SetCanBeClicked();
-		Drink_1->DrinkTaken.BindUObject(this, &AWaiter::SetStartingLocAndRot);
+	ActiveDrinks.Empty();
 
-		Drink_2 = GetWorld()->SpawnActor<ABaseDrink>(DrinkToSpawn[DrinkToSpawn_2],
-			DrinkSpot_3->GetComponentLocation(), DrinkSpot_3->GetComponentRotation());
-		Drink_2->SetCanBeClicked();
-		Drink_2->DrinkTaken.BindUObject(this, &AWaiter::SetStartingLocAndRot);
+	if (!GetWorld())
+	{
+		return;
+	}
+
+	TArray<int32> SpotIndexes;
+
+	if (DrinksIndexes.Num() == 1)
+	{
+		SpotIndexes = { 1 };
+	}
+	else if (DrinksIndexes.Num() == 2)
+	{
+		SpotIndexes = { 0, 2 };
+	}
+	else if (DrinksIndexes.Num() == 3)
+	{
+		SpotIndexes = { 0, 1, 2 };
 	}
 	else
 	{
-		Drink_1 = GetWorld()->SpawnActor<ABaseDrink>(DrinkToSpawn[DrinkToSpawn_1],
-			DrinkSpot_1->GetComponentLocation(), DrinkSpot_1->GetComponentRotation());
-		Drink_1->SetCanBeClicked();
-		Drink_1->DrinkTaken.BindUObject(this, &AWaiter::SetStartingLocAndRot);
+		return;
+	}
 
-		Drink_2 = GetWorld()->SpawnActor<ABaseDrink>(DrinkToSpawn[DrinkToSpawn_2],
-			DrinkSpot_2->GetComponentLocation(), DrinkSpot_2->GetComponentRotation());
-		Drink_2->SetCanBeClicked();
-		Drink_2->DrinkTaken.BindUObject(this, &AWaiter::SetStartingLocAndRot);
+	for (int32 i = 0; i < DrinksIndexes.Num(); i++)
+	{
+		const int32 DrinkIndex = DrinksIndexes[i];
+		const int32 SpotIndex = SpotIndexes[i];
 
-		Drink_3 = GetWorld()->SpawnActor<ABaseDrink>(DrinkToSpawn[DrinkToSpawn_3],
-			DrinkSpot_3->GetComponentLocation(), DrinkSpot_3->GetComponentRotation());
-		Drink_3->SetCanBeClicked();
-		Drink_3->DrinkTaken.BindUObject(this, &AWaiter::SetStartingLocAndRot);
+		if (!DrinkToSpawn.IsValidIndex(DrinkIndex) || !DrinkSpots.IsValidIndex(SpotIndex))
+		{
+			continue;
+		}
+
+		ABaseDrink* SpawnedDrink = GetWorld()->SpawnActor<ABaseDrink>(
+			DrinkToSpawn[DrinkIndex],
+			DrinkSpots[SpotIndex]->GetComponentLocation(),
+			DrinkSpots[SpotIndex]->GetComponentRotation()
+		);
+
+		if (!SpawnedDrink)
+		{
+			continue;
+		}
+
+		SpawnedDrink->SetCanBeClicked();
+		SpawnedDrink->DrinkTaken.BindUObject(this, &AWaiter::SetStartingLocAndRot);
+		ActiveDrinks.Add(SpawnedDrink);
 	}
 }
 
-FVector2D AWaiter::RandDrinks(TArray<int> DrinksLvl)
+TArray<int32> AWaiter::RandDrinks(const TArray<int32>& DrinksLvl)
 {
-	Algo::RandomShuffle(DrinksLvl);
+	TArray<int32> RandomDrinks;
+	if (DrinksLvl.IsEmpty()) return RandomDrinks;
+	
+	int32 FirstIndex = FMath::RandRange(0, DrinksLvl.Num() - 1);
+	RandomDrinks.Add(DrinksLvl[FirstIndex]);
+	
+	if (DrinksLvl.Num() == 1)
+	{
+		return RandomDrinks;
+	}
+	
+	int32 SecondIndex;
+	do
+	{
+		SecondIndex = FMath::RandRange(0, DrinksLvl.Num() - 1);
+	}
+	while (SecondIndex == FirstIndex);
+	
+	RandomDrinks.Add(DrinksLvl[SecondIndex]);
 
-	int FirstDrink = DrinksLvl[0];
-	int SecondDrink = DrinksLvl[1];
-
-	return FVector2D (FirstDrink, SecondDrink);
+	return  RandomDrinks;
 }

@@ -43,7 +43,7 @@ protected:
 
 private:
 	UPROPERTY()
-	USceneComponent* CameraPosition;
+	TObjectPtr<USceneComponent> CameraPosition;
 	
 	UPROPERTY(VisibleAnywhere)
 	ECamPosition ECurrentCamPos;
@@ -52,13 +52,13 @@ private:
 	FRotator CameraRot;
 
 	FTimerHandle MoveTimerHandle;
-	float CurrentMoveTime = 0;
+	float CurrentMoveSteps = 0;
 
 	UPROPERTY(EditAnywhere)
 	float MoveSpeed = 5.f;
 
 	UPROPERTY(EditAnywhere)
-	float MoveTime = 30.f;
+	float MoveSteps = 30.f;
 
 	void MoveTop();
 	void MoveBottom();

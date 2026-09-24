@@ -41,24 +41,35 @@ void AGameStateBaseClass::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// TO DO
+	// CHANGE TO EVENT-DRIVEN
 	if (!Enemy && GetBrawlManager()->GetCurrentState() != ECurrentState::WaiterServe)
 	{
-		//FVector SpawnLoc (170, 200, 88);
-		//FRotator SpawnRot (0, 0, 0);
-		Enemy = GetWorld()->SpawnActor<ABaseEnemy>(RandEnemyToSpawn[RandEnemy()], EnemySpawnLoc, EnemySpawnRot);
-		BrawlManager->SetNewEnemy();
-		BrawlManager->InitializeEnemy(Enemy);
-		Enemy->EnemyDiedDelegate.BindUObject(this, &AGameStateBaseClass::EnemyReset);
-		Enemy->OnDicePlacement.BindUObject(BrawlManager, &UBrawlManager::DicesPlacementSequence);
+		const int32 EnemyIndex = RandEnemy();
+		if (EnemyIndex == INDEX_NONE || !EnemiesToSpawn.IsValidIndex(EnemyIndex) || !EnemiesToSpawn[EnemyIndex])
+		{
+			UE_LOG(LogTemp, Error, TEXT("Cannot spawn enemy"));
+			return;
+		}
+		Enemy = GetWorld()->SpawnActor<ABaseEnemy>(EnemiesToSpawn[EnemyIndex], EnemySpawnLoc, EnemySpawnRot);
+		if (Enemy)
+		{
+			BrawlManager->SetNewEnemy();
+			BrawlManager->InitializeEnemy(Enemy);
+			Enemy->EnemyDiedDelegate.BindUObject(this, &AGameStateBaseClass::EnemyReset);
+			Enemy->OnDicePlacement.BindUObject(BrawlManager, &UBrawlManager::DicesPlacementSequence);
+		}
 	}
+	// TO DO
+	// CHANGE TO EVENT-DRIVEN
 	PlayerCameraBlock();
 }
 
 int AGameStateBaseClass::RandEnemy()
 {
-	int RandEnemyIndex = FMath::RandRange(0, 3);
+	if (EnemiesToSpawn.IsEmpty()) return INDEX_NONE;
 
-	return RandEnemyIndex;
+	return FMath::RandRange(0, EnemiesToSpawn.Num() - 1);
 }
 
 void AGameStateBaseClass::EnemyReset()
@@ -71,6 +82,12 @@ void AGameStateBaseClass::EnemyReset()
 
 void AGameStateBaseClass::PlayerCameraBlock()
 {
+	if (!Player)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Player not found!"));
+		return;
+	}
+	
 	if (BrawlManager->GetCurrentState() == ECurrentState::WaiterServe)
 	{
 		Player->Set_bCanMove(false);

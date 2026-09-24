@@ -24,7 +24,7 @@ public:
 	
 	UEnemyDecisionComponent();
 	
-	TPair<ABaseDice*, int> GetDiceToPlace(
+	TPair<ABaseDice*, int32> GetDiceToPlace(
 		const TArray<ABaseDice*>& PlayerDicesOnTable,
 		const TArray<ABaseDice*>& EnemyDicesOnTable,
 		const TArray<ABaseDice*>& EnemyDicesOnHand);
@@ -40,18 +40,18 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	EDicePlacementDecision EEnemyPlacementDecision;
 	
-	// Finds slot index to place dice on table // Returns -1 if there is no slot to place dice
-	virtual int FindSlotToPlaceDice(
+	// Finds slot index to place dice on table
+	virtual int32 FindSlotToPlaceDice(
 		const TArray<ABaseDice*>& PlayerDicesOnTable, 
 		const TArray<ABaseDice*>& EnemyDicesOnTable);
 	
 	virtual ABaseDice* ChoosingDiceToPutOnTable(
 		const TArray<ABaseDice*>& PlayerDicesOnTable,
 		const TArray<ABaseDice*>& EnemyDices,
-		const int Slot);
+		const int32 Slot);
 	
 	UPROPERTY()
-	class UEnemyStrategy* Strategy;
+	TObjectPtr<class UEnemyStrategy> Strategy;
 
 public:	
 	

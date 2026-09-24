@@ -83,13 +83,13 @@ protected:
 	TArray<int> SwapPoints = {2, 6, 10};
 	
 	UPROPERTY()
-	AGameStateBaseClass *GameState;
+	TObjectPtr<AGameStateBaseClass> GameState;
 	UPROPERTY()
-	UTurnManager* TurnManager;
+	TObjectPtr<UTurnManager> TurnManager;
 	UPROPERTY(VisibleAnywhere)
-	ABasePlayer* Player;
+	TObjectPtr<ABasePlayer> Player;
 	UPROPERTY(VisibleAnywhere)
-	ABaseEnemy* Enemy;
+	TObjectPtr<ABaseEnemy> Enemy;
 	
 	UPROPERTY(VisibleAnywhere)
 	int BigPlayerPoints;

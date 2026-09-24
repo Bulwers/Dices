@@ -3,10 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Player/BasePlayer.h"
 #include "GameFramework/Actor.h"
-#include "BuffTriggerAreaComponent.h"
 #include "DiceBuffArea.generated.h"
+
+class ABasePlayer;
+class UBuffTriggerAreaComponent;
 
 UCLASS()
 class DICES_API ADiceBuffArea : public AActor
@@ -17,10 +18,10 @@ public:
 	ADiceBuffArea();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	ABasePlayer* Player;
+	TObjectPtr<ABasePlayer> Player;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	UBuffTriggerAreaComponent* TriggerArea;
+	TObjectPtr<UBuffTriggerAreaComponent> TriggerArea;
 
 	UFUNCTION()
 	void DiceBuff(AActor* ActorClicked, FKey InKey);

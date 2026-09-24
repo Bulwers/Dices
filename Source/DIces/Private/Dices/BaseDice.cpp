@@ -6,14 +6,14 @@
 
 ABaseDice::ABaseDice()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	Tags.Add(FName("Dice"));
 
 	DiceMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DiceMesh"));
 	RootComponent = DiceMesh;
 
-	for (int i = 0; i < 6; i++)
+	for (int32 i = 0; i < 6; i++)
 	{
 		UArrowComponent* Arrow= CreateDefaultSubobject<UArrowComponent>(*FString::Printf(TEXT("Arrow%d"), i+1));
 		Arrow->SetupAttachment(DiceMesh);
@@ -28,23 +28,21 @@ void ABaseDice::BeginPlay()
 	StartLocation = GetActorLocation();
 
 	bIsPlayer = false;
-	bIsChoosen = false;
-	bIsEnemyChoosen = false;
+	bIsChosen = false;
+	bIsEnemyChosen = false;
 	bCanHighlight = false;
+	bIsRolled = false;
 	bIsStopped = true;
 	bIsVisible = true;
-}
-
-void ABaseDice::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+	
+	Bonus = 0;
 }
 
 void ABaseDice::CurrentPositionUpdate()
 {
 	Location = GetActorLocation();
 
-	if (Location == PastLoc)
+	if (Location.Equals(PastLoc, 0.5f))
 	{
 		bIsStopped = true;
 		OnDiceStopped.ExecuteIfBound();
@@ -107,9 +105,10 @@ void ABaseDice::EnemyRolling()
 
 int ABaseDice::Result()
 {
-	for (int i = 0; i < Arrows.Num(); i++)
+	const int32 FacesNum = FMath::Min(Arrows.Num(), DiceResults.Num());
+	for (int32 i = 0; i < FacesNum; i++)
 	{
-		if (Arrows[i] && Arrows[i]->GetForwardVector().Z > 0.5)
+		if (Arrows[i] && Arrows[i]->GetForwardVector().Z > 0.5f)
 		{
 			return DiceResults[i];
 		}

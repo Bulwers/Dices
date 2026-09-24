@@ -5,6 +5,7 @@
 #include "Player/BasePlayer.h"
 #include "Player/Conditions/BaseCondition.h"
 #include "Kismet/GameplayStatics.h"
+#include "Widgets/BuffTriggerAreaComponent.h"
 
 ADiceBuffArea::ADiceBuffArea()
 {

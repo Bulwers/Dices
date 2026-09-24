@@ -4,9 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Player/BasePlayer.h"
-#include "Dices/BaseDice.h"
 #include "PlayerDiceManagerComponent.generated.h"
+
+class ABasePlayer;
+class ABaseDice;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class DICES_API UPlayerDiceManagerComponent : public UActorComponent
@@ -57,7 +58,7 @@ private:
 	TArray<FVector> DiceSpots;
 
 	UFUNCTION()
-	FVector RandLoc(FVector Loc, int Range);
+	FVector RandLoc(FVector Loc, int32 Range);
 	UFUNCTION()
-	FRotator RandRot(FRotator Rot, int Range);
+	FRotator RandRot(FRotator Rot, int32 Range);
 };

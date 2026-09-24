@@ -11,7 +11,7 @@
 
 ABaseEnemy::ABaseEnemy()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	EnemyHealthComp = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
 	EnemyDiceComp = CreateDefaultSubobject<UEnemyDiceComponent>(TEXT("EnemyDiceComp"));
@@ -26,9 +26,23 @@ void ABaseEnemy::BeginPlay()
 	
 	EnemyHealthComp->OnDeathEffects.BindUObject(this, &ABaseEnemy::DeathAction);
 	
-	EnemyDecisionComp = NewObject<UEnemyDecisionComponent>(this, DecisionComponentToSpawn, TEXT("EnemyDecisionComp"));
-	EnemyDecisionComp->RegisterComponent();
-	EnemyDecisionComp->SetStrategy(StrategyName);
+	if (DecisionComponentToSpawn)
+	{
+		EnemyDecisionComp = NewObject<UEnemyDecisionComponent>(this, DecisionComponentToSpawn, TEXT("EnemyDecisionComp"));
+		if (IsValid(EnemyDecisionComp))
+		{
+			EnemyDecisionComp->RegisterComponent();
+			EnemyDecisionComp->SetStrategy(StrategyName);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to create EnemyDecisionComp"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("DecisionComponentToSpawn is not set"));
+	}
 	
 	DialogueManager = Cast<ADialogueManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ADialogueManager::StaticClass()));
 	if (!DialogueManager) UE_LOG(LogTemp, Warning, TEXT("DialogueManager not found"));
@@ -61,11 +75,6 @@ void ABaseEnemy::GetHit() const
 	EnemyHealthComp->GetHit();
 }
 
-void ABaseEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-}
-
 void ABaseEnemy::EnemySpawnDices()
 {
 	EnemyDiceComp->SpawnDices(EnemyDicesOnHand, DicesToSpawn, this);
@@ -74,11 +83,11 @@ void ABaseEnemy::EnemySpawnDices()
 void ABaseEnemy::EnemyDiceRolling()
 {
 	if (bEnemyDiceRolled) return;
-	if (!Algo::AllOf(EnemyDicesOnHand, [](ABaseDice* Dice) { return Dice != nullptr; })) return;
+	if (!Algo::AllOf(EnemyDicesOnHand, [](ABaseDice* Dice) { return IsValid(Dice); })) return;
 	for (ABaseDice* Dice : EnemyDicesOnHand)
 	{
 		Dice->EnemyRolling();
-		Dice->bIsEnemyChoosen = false;
+		Dice->bIsEnemyChosen = false;
 	}
 	bEnemyDiceRolled = true;
 	bAreAllDicesStopped = false;
@@ -86,19 +95,41 @@ void ABaseEnemy::EnemyDiceRolling()
 
 void ABaseEnemy::PlaceDiceOnTable()
 {
-	TPair<ABaseDice*, int> const DiceAndSlot = EnemyDecisionComp->GetDiceToPlace(PlayerDicesOnTable, EnemyDicesOnTable, EnemyDicesOnHand);
-	const int Spot = DiceAndSlot.Value;
+	if (!IsValid(EnemyDecisionComp)) return;
+	
+	TPair<ABaseDice*, int32> const DiceAndSlot = EnemyDecisionComp->GetDiceToPlace(PlayerDicesOnTable, EnemyDicesOnTable, EnemyDicesOnHand);
+	const int32 Spot = DiceAndSlot.Value;
 	ABaseDice* Dice = DiceAndSlot.Key;
-	if (!Dice) return;
-	EnemyDicesOnTable[Spot] = Dice;
+	
+	if (!IsValid(Dice)) return;
+	
 	static const FName BigDice(TEXT("BigDice"));
 	if (Dice->ActorHasTag(BigDice))
 	{
+		if (!EnemyDicesOnTable.IsValidIndex(Spot) ||
+			!EnemyDicesOnTable.IsValidIndex(Spot + 1) ||
+			!DicesSpots.IsValidIndex(Spot/2))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Invalid index for BigDice placement: Spot %d"), Spot);
+			return;
+		}
+		EnemyDicesOnTable[Spot] = Dice;
 		EnemyDicesOnTable[Spot + 1] = Dice;
 		Dice->DiceMesh->SetWorldLocation(DicesSpots[Spot/2], false, nullptr, ETeleportType::None);
+	
 	}
-	else Dice->DiceMesh->SetWorldLocation(DicesSpots[Spot], false, nullptr, ETeleportType::None);
-	Dice->bIsEnemyChoosen = true;
+	else
+	{
+		if (!EnemyDicesOnTable.IsValidIndex(Spot) || 
+			!DicesSpots.IsValidIndex(Spot))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Invalid index for Dice placement: Spot %d"), Spot);
+			return;
+		}
+		EnemyDicesOnTable[Spot] = Dice;
+		Dice->DiceMesh->SetWorldLocation(DicesSpots[Spot], false, nullptr, ETeleportType::None);
+	}
+	Dice->bIsEnemyChosen = true;
 	OnDicePlacement.ExecuteIfBound(Dice);
 }
 
@@ -113,13 +144,13 @@ void ABaseEnemy::ResetDicesPosition()
 			Dice->bIsVisible = true;
 		}
 	}
-	for (ABaseDice*& Slot : EnemyDicesOnTable) Slot = nullptr;
+	for (TObjectPtr<ABaseDice>& Slot : EnemyDicesOnTable) Slot = nullptr;
 }
 
 void ABaseEnemy::DestroyFangsOnTable()
 {
 	static const FName Fang(TEXT("Fang"));
-	for (ABaseDice*& Dice : EnemyDicesOnTable)
+	for (TObjectPtr<ABaseDice>& Dice : EnemyDicesOnTable)
 	{
 		if (IsValid(Dice) && Dice->ActorHasTag(Fang))
 		{

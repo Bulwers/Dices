@@ -17,7 +17,7 @@ public:
 	UBuffTriggerAreaComponent();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	class ABaseDice* PlayerDice;
+	TWeakObjectPtr<class ABaseDice> PlayerDice;
 
 protected:
 	// Called when the game starts or when spawned

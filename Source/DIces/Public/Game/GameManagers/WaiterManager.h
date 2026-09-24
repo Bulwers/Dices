@@ -27,6 +27,8 @@ public:
 protected:
 
 	virtual void BeginPlay() override;
+	UPROPERTY(EditAnywhere)
+	int ServeChance = 0;
 
 public:	
 

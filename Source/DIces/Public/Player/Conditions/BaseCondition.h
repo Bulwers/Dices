@@ -1,13 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Player/BasePlayer.h"
-#include "Game/GameStateBaseClass.h"
 #include "BaseCondition.generated.h"
 
+class AGameStateBaseClass;
+class ABasePlayer;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent), Blueprintable)
 class DICES_API UBaseCondition : public UActorComponent
@@ -15,38 +14,35 @@ class DICES_API UBaseCondition : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	// Sets default values for this component's properties
 	UBaseCondition();
 
 	UFUNCTION()
 	virtual void DrinkEffect();
 	UPROPERTY()
 	bool bCanBuff;
+	
+	UPROPERTY(VisibleAnywhere)
+	int32 TurnLifetime;
 
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere)
 	AGameStateBaseClass* GameState;
 
-	// Player character
 	UPROPERTY(VisibleAnywhere)
 	ABasePlayer* Player;
 
-	// Lifetime starting turn
 	UPROPERTY(VisibleAnywhere)
-	int StartTurnCount;
-	// Actual turn
+	int32 StartTurnCount;
+
 	UPROPERTY(VisibleAnywhere)
-	int ActualTurnCount;
+	int32 ActualTurnCount;
 	UPROPERTY(VisibleAnywhere)
-	int NewTurnCount;
+	int32 NewTurnCount;
 	
 
 public:	
-	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-		
+	
 };

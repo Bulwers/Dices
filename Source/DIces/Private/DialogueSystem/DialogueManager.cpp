@@ -7,17 +7,12 @@
 
 ADialogueManager::ADialogueManager()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 }
 
 void ADialogueManager::BeginPlay()
 {
 	Super::BeginPlay();
-}
-
-void ADialogueManager::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void ADialogueManager::StartDialogue(UDialogueData* Data)
@@ -30,7 +25,11 @@ void ADialogueManager::StartDialogue(UDialogueData* Data)
 	if (DialogueWidgetClass && !DialogueWidget)
 	{
 		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		if (!PC) return;
+	
 		DialogueWidget = CreateWidget<UDialogueWidget>(PC, DialogueWidgetClass);
+		if (!DialogueWidget) return;
+		
 		DialogueWidget->SetDialogueManager(this);
 		DialogueWidget->AddToViewport();
 	}
@@ -51,18 +50,11 @@ void ADialogueManager::ShowLine(int32 Index)
 
 	if (DialogueWidget)
 	{
-		FName FunctionName = "UpdateDialogue";
-		UFunction* Function = DialogueWidget->FindFunction(FunctionName);
-		if (Function)
-		{
-			struct { FText Speaker; FText Body; TArray<FDialogueChoice> Choices; bool bHasChoices; } Parameters;
-			Parameters.Speaker = Line.SpeakerName;
-			Parameters.Body = Line.DialogueText;
-			Parameters.Choices = Line.Choices;
-			Parameters.bHasChoices = true;
-			if (Line.Choices.IsEmpty()) Parameters.bHasChoices = false;
-			DialogueWidget->ProcessEvent(Function, &Parameters);
-		}
+		DialogueWidget->UpdateDialogue(
+			Line.SpeakerName, 
+			Line.DialogueText, 
+			Line.Choices, 
+			!Line.Choices.IsEmpty());
 	}
 }
 
@@ -101,5 +93,7 @@ void ADialogueManager::EndDialogue()
 		DialogueWidget->RemoveFromParent();
 		DialogueWidget = nullptr;
 	}
+	CurrentDialogue = nullptr;
+	CurrentLineIndex = INDEX_NONE;
 	OnDialogueEnd.Broadcast();
 }

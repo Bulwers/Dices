@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -6,7 +5,6 @@
 #include "BaseCondition.h"
 #include "LuckyDrinkCondition.generated.h"
 
-//class UBaseDrinkWidget;
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Blueprintable)
 class DICES_API ULuckyDrinkCondition : public UBaseCondition
@@ -16,19 +14,15 @@ class DICES_API ULuckyDrinkCondition : public UBaseCondition
 public:
 
 	UPROPERTY()
-	bool bCanRereoll;
+	bool bCanReroll;
 	UPROPERTY()
-	bool bHasRerolld;
+	bool bHasRerolled;
 
 	virtual void DrinkEffect() override;
 
 protected:
-	// Called when the game starts
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-
 };

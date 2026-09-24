@@ -26,17 +26,17 @@ public:
 	void EnemyRolling();
 
 	UFUNCTION(BlueprintCallable)
-	virtual int Result();
+	virtual int32 Result();
 	UPROPERTY(VisibleAnywhere)
-	int Bonus;
+	int32 Bonus;
 	UFUNCTION(BlueprintCallable)
-	int Sum();
+	int32 Sum();
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
-	bool bIsEnemyChoosen;
+	bool bIsEnemyChosen;
 
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
-	bool bIsChoosen;
+	bool bIsChosen;
 	UPROPERTY(BlueprintReadWrite)
 	bool bIsPlayer;
 	UPROPERTY(BlueprintReadWrite)
@@ -56,19 +56,19 @@ public:
 	virtual void DiceJump();
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool bIsStopped;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UStaticMeshComponent* DiceMesh;
+	TObjectPtr<UStaticMeshComponent> DiceMesh;
 
 protected:
 
 	virtual void BeginPlay() override;
 	
 	UPROPERTY(EditAnywhere, Meta = (EditFixedSize))
-	TArray<int> DiceResults = { 0, 0, 0, 0, 0, 0};
+	TArray<int32> DiceResults = { 0, 0, 0, 0, 0, 0};
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<class UArrowComponent*> Arrows;
+	TArray<TObjectPtr<class UArrowComponent>> Arrows;
 	
 	UPROPERTY(VisibleAnywhere)
 	FVector Location;
@@ -87,6 +87,5 @@ protected:
 	
 public:	
 
-	virtual void Tick(float DeltaTime) override;
 
 };

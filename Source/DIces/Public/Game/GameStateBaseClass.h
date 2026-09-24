@@ -46,9 +46,9 @@ protected:
 	virtual void BeginPlay() override;
 	
 	UPROPERTY(BlueprintReadWrite, VisibleAnywhere)
-	ABasePlayer* Player;
+	TObjectPtr<ABasePlayer> Player;
 	UPROPERTY(VisibleAnywhere)
-	ABaseEnemy* Enemy;
+	TObjectPtr<ABaseEnemy> Enemy;
 
 	UPROPERTY(VisibleAnywhere)
 	int TurnCount = 1;
@@ -56,16 +56,14 @@ protected:
 	int EnemiesCount = 0;
 	
 	UPROPERTY(EditDefaultsOnly)
-	UTurnManager* TurnManager;
+	TObjectPtr<UTurnManager> TurnManager;
 	UPROPERTY(EditDefaultsOnly)
-	UBrawlManager* BrawlManager;
+	TObjectPtr<UBrawlManager> BrawlManager;
 	UPROPERTY(EditDefaultsOnly)
-	UWaiterManager* WaiterManager;
+	TObjectPtr<UWaiterManager> WaiterManager;
 	
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<ABaseEnemy> EnemyToSpawn;
-	UPROPERTY(EditDefaultsOnly)
-	TArray<TSubclassOf<ABaseEnemy>> RandEnemyToSpawn;
+	TArray<TSubclassOf<ABaseEnemy>> EnemiesToSpawn;
 	UPROPERTY(EditAnywhere)
 	FVector EnemySpawnLoc;
 	UPROPERTY(EditAnywhere)
@@ -75,7 +73,7 @@ protected:
 	void EnemyReset();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
-	class ACandleClass* Candle;
+	TObjectPtr<class ACandleClass> Candle;
 	
 	void PlayerCameraBlock();
 	UPROPERTY()

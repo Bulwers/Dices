@@ -13,14 +13,16 @@ void AJumpingDice::DiceJump()
 
 void AJumpingDice::DiceRotation()
 {
-	if (Result() != 6)
+	if (Result() == 6)
 	{
-		SetActorRelativeRotation(FMath::Lerp(Rotation, FRotator(180, RandRot, 0), 0.8));
-		++RotateTime;
+		GetWorldTimerManager().ClearTimer(RotationTimerHandle);
+		return;
+	}
+	SetActorRelativeRotation(FMath::Lerp(Rotation, FRotator(180, RandRot, 0), 0.8));
+	++RotateTime;
 
-		if (RotateTime >= 3)
-		{
-			GetWorldTimerManager().ClearTimer(RotationTimerHandle);
-		}
+	if (RotateTime >= 3)
+	{
+		GetWorldTimerManager().ClearTimer(RotationTimerHandle);
 	}
 }

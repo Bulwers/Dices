@@ -29,7 +29,7 @@ void UWaiterManager::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 // Random chance for waiter to serve during the game
 void UWaiterManager::RandWaiterServe() const
 {
-	if (FMath::RandRange(0, 100) >= 75)
+	if (FMath::RandRange(0, 100) <= ServeChance)
 	{
 		WaiterCall.ExecuteIfBound();
 		UE_LOG(LogTemp, Warning, TEXT("Random Waiter Call"));

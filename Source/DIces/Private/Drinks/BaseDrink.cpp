@@ -6,17 +6,14 @@
 #include "Player/Conditions/BaseCondition.h"
 #include "Algo/RandomShuffle.h"
 
-// Sets default values
 ABaseDrink::ABaseDrink()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	BottleBase = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Bottle"));
 	RootComponent = BottleBase;
 }
 
-// Called when the game starts or when spawned
 void ABaseDrink::BeginPlay()
 {
 	Super::BeginPlay();
@@ -26,35 +23,38 @@ void ABaseDrink::BeginPlay()
 	OnClicked.AddDynamic(this, &ABaseDrink::AddToPlayer);
 
 	Player = Cast<ABasePlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
-	
-}
-
-// Called every frame
-void ABaseDrink::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+	if (!IsValid(Player))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Player not found / ABaseDrink"));
+	}
 }
 
 void ABaseDrink::AddToPlayer(AActor* ActorClicked, FKey InKey)
 {
-	if (!bCanBeClicked) return;
-	if (!bIsPlayer && Player->GetGoldQuantity() >= GoldPrice)
+	if (!bCanBeClicked || !IsValid(Player)) return;
+	if (!bIsPlayer)
 	{
-		Player->RemoveGold(GoldPrice);
+		if (Player->GetGoldQuantity() < GoldPrice) return;
+		
 		TArray DrinkSpot{ 0, 1, 2, 3, 4, 5 };
 		Algo::RandomShuffle(DrinkSpot);
-		for (int i = 0; i < 6; i++)
+		for (const int32 SpotIndex : DrinkSpot)
 		{
-			if (Player->bIsDrinkSpotTaken[DrinkSpot[i]]) continue;
+			if (!Player->bIsDrinkSpotTaken.IsValidIndex(SpotIndex) || !Player->DrinksOnTable.IsValidIndex(SpotIndex)) continue;
+			if (Player->bIsDrinkSpotTaken[SpotIndex]) continue;
 				
+			Player->RemoveGold(GoldPrice);
+			
 			bIsPlayer = true;
-			Player->bIsDrinkSpotTaken[DrinkSpot[i]] = true;
-			SetActorLocation(Player->DrinksOnTable[DrinkSpot[i]], false, nullptr, ETeleportType::None);
+			PlayerDrinkSlot = SpotIndex;
+			Player->bIsDrinkSpotTaken[SpotIndex] = true;
+			SetActorLocation(Player->DrinksOnTable[SpotIndex], false, nullptr, ETeleportType::None);
 			DrinkTaken.ExecuteIfBound();
 			break;
 		}
+		UE_LOG(LogTemp, Warning, TEXT("No free drink spot / ABaseDrink"));
 	}
-	else if (bIsPlayer)
+	else
 	{
 		Drink();
 	}
@@ -62,15 +62,33 @@ void ABaseDrink::AddToPlayer(AActor* ActorClicked, FKey InKey)
 
 void ABaseDrink::Drink()
 {
-	for (UBaseCondition* Condition : Player->DrinkConditions)
+	if (!IsValid(Player)) return;
+	if (!ConditionToApply)
 	{
-		if (Condition == nullptr)
-		{
-			Condition = NewObject<UBaseCondition>(Player);
-			Condition->RegisterComponent();
-			break;
-		}		
+		UE_LOG(LogTemp, Error, TEXT("ConditionToApply is not set / ABaseDrink"));
+		return;
 	}
+	
+	for (TObjectPtr<UBaseCondition>& Condition : Player->DrinkConditions)
+	{
+		if (!IsValid(Condition))
+		{
+			Condition = NewObject<UBaseCondition>(Player, ConditionToApply);
+			if (!IsValid(Condition))
+			{
+				UE_LOG(LogTemp, Error, TEXT("Failed to create drink condition / ABaseDrink"));
+				return;
+			}
+			Condition->RegisterComponent();
+			Condition->TurnLifetime = ConditionLifetime;
+			break;
+		}
+	}
+	if (Player->bIsDrinkSpotTaken.IsValidIndex(PlayerDrinkSlot))
+	{
+		Player->bIsDrinkSpotTaken[PlayerDrinkSlot] = false;
+	}
+	PlayerDrinkSlot = INDEX_NONE;
 	Destroy();
 }
 

@@ -16,8 +16,7 @@ public:
 	
 	UEnemyDiceComponent();
 	
-	UFUNCTION()
-	void SpawnDices(TArray<ABaseDice*> &EnemyDices, TArray<TSubclassOf<ABaseDice>> DicesToSpawn, ABaseEnemy* Owner);
+	void SpawnDices(TArray<TObjectPtr<ABaseDice>> &EnemyDices, TArray<TSubclassOf<ABaseDice>> DicesToSpawn, ABaseEnemy* Owner);
 	
 protected:
 	

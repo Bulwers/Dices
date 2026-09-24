@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Player/Conditions/BaseCondition.h"
 #include "BaseDrink.generated.h"
 
 class ABasePlayer;
@@ -25,8 +26,8 @@ public:
 	UFUNCTION()
 	void AddToPlayer(AActor* ActorClicked, FKey InKey);
 
-	UPROPERTY(VisibleAnywhere)
-	bool bIsPlayer;
+	UPROPERTY(EditAnywhere)
+	bool bIsPlayer = false;
 	
 	UFUNCTION()
 	void SetCanBeClicked() { bCanBeClicked = true; }
@@ -36,19 +37,25 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(VisibleAnywhere)
-	ABasePlayer* Player;
+	TObjectPtr<ABasePlayer> Player;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UStaticMeshComponent* BottleBase;
+	TObjectPtr<UStaticMeshComponent> BottleBase;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Drink")
+	int32 GoldPrice;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Drink")
+	TSubclassOf<UBaseCondition> ConditionToApply;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Drink")
+	int32 ConditionLifetime;
 	
 	UPROPERTY(EditAnywhere)
-	int GoldPrice;
-	
-	UPROPERTY()
 	bool bCanBeClicked = false;
 	
+	UPROPERTY()
+	int32 PlayerDrinkSlot = INDEX_NONE;
+	
 public:	
-
-	virtual void Tick(float DeltaTime) override;
 
 };

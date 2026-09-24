@@ -14,7 +14,7 @@
 
 ABasePlayer::ABasePlayer()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule"));
 	RootComponent = CapsuleComponent;
@@ -44,17 +44,12 @@ void ABasePlayer::BeginPlay()
 	HealthComp->OnDeathEffects.BindUObject(this, &ABasePlayer::PlayerDeath);
 
 	Controller = Cast<APlayerController>(GetController());
-	if (Controller)
+	if (Controller.IsValid())
 	{
 		Controller->SetShowMouseCursor(true);
 	}
 
 	CameraComp->Initialize(CameraPosition, MoveSpeed, MoveTime);
-}
-
-void ABasePlayer::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void ABasePlayer::DicesTest(ABaseDice* Dice)
@@ -156,10 +151,10 @@ void ABasePlayer::HandleCamera(ECamPosition Direction, bool CanHighlight, bool D
 void ABasePlayer::DiceChoose()
 {
 	const auto CamPosition = CameraComp->GetCurrentCamPos();
-	DiceComp->DiceChoose(CamPosition, Controller, this);
+	DiceComp->DiceChoose(CamPosition, Controller.Get(), this);
 
 	// Auto-move to top after placing last dice on table
-	if (CamPosition == ECamPosition::Right && PlayerDicesOnTable[5])
+	if (CamPosition == ECamPosition::Right && PlayerDicesOnTable.IsValidIndex(5) && IsValid(PlayerDicesOnTable[5]))
 	{
 		CameraComp->MoveCamera(ECamPosition::Top);
 	}
@@ -196,7 +191,7 @@ void ABasePlayer::TableHit()
 void ABasePlayer::DestroyFangsOnTable()
 {
 	static const FName Tag(TEXT("Fang"));
-	for (ABaseDice*& Dice : PlayerDicesOnTable)
+	for (TObjectPtr<ABaseDice>& Dice : PlayerDicesOnTable)
 	{
 		if (IsValid(Dice) && Dice->ActorHasTag(Tag))
 		{
@@ -223,8 +218,8 @@ void ABasePlayer::RemoveGold(int Amount)
 
 void ABasePlayer::ShowCoins()
 {
-	if (GoldQuantity <= 0) return;
-	for (int i = 1; i <= GoldQuantity; i++)
+	if (GoldQuantity <= 0 || !GoldToSpawn) return;
+	for (int32 i = 0; i < GoldQuantity; i++)
 	{
 		GetWorld()->SpawnActor<AGold>(GoldToSpawn, RandLoc(GoldSpawnLocation, 5), RandRot(GoldSpawnRotation, 5));
 	}
@@ -241,6 +236,7 @@ int ABasePlayer::GetGoldQuantity()
 
 void ABasePlayer::FangSpawn()
 {
+	if (!FangToSpawn) return;
 	GetWorld()->SpawnActor<AFangDice>(FangToSpawn, RandLoc(PlayerFangSpawnLoc, 3), RandRot(PlayerFangSpawnRot, 20));
 }
 

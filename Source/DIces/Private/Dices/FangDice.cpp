@@ -1,11 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Dices/FangDice.h"
 
 AFangDice::AFangDice()
 {
-	// Setting tag
 	Tags.Add(FName("Fang"));
 }
 
@@ -16,8 +14,8 @@ void AFangDice::BeginPlay()
 	bIsRolled = true;
 	
 	bIsPlayer = true;
-	bIsChoosen = true;
-	bIsEnemyChoosen = false;
+	bIsChosen = true;
+	bIsEnemyChosen = false;
 	bCanHighlight = false;
 	bIsStopped = true;
 	bIsVisible = true;
