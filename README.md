@@ -6,6 +6,8 @@ Dices is a **turn-based dice combat prototype developed in Unreal Engine 5 using
 
 The project focuses on gameplay programming, physics-based dice mechanics, enemy decision-making and modular gameplay systems.
 
+![Dices roll](media/dices_roll.gif)
+
 ## Features
 
 * Turn-based dice combat
@@ -44,6 +46,8 @@ Players take turns placing their dices in the center of the table by a **2 / 4 /
 A coin toss determines who places first. After each Brawl, the placement order is reversed.
 
 Because players cannot see their opponent's dices before they are placed, each decision involves predicting where the opponent may commit their stronger or weaker rolls.
+
+![Dices placement](media/dices_placement.gif)
 
 ### Pair
 
@@ -91,6 +95,8 @@ The system evaluates available dice and the current state of the board before se
 
 Scoring data used by enemy strategies can be modified using Unreal Engine Data Tables.
 
+![Dices big](media/dices_big.gif)
+
 ## Dice System
 
 Dices are physics-based gameplay actors.
@@ -102,6 +108,8 @@ The player can select, roll and place dice during combat. Beside standard dices 
 * Dice with alternative face values
 
 Player dice functionality is managed by `PlayerDiceManagerComponent`, which handles selection, rolling, placement and resetting dice between gameplay states.
+
+![Dices fake](media/dices_fake.gif)
 
 ## Drinks & Conditions
 
@@ -115,6 +123,8 @@ These effects can include:
 * Allowing additional dice interactions
 * Temporarily replacing dice with dice using different face values
 
+![Dices reroll](media/dices_reroll.gif)
+
 ## Dialogue System
 
 The project includes a branching dialogue system.
@@ -126,6 +136,8 @@ The system involves:
 * `DialogueData` — stores dialogue content and available choices
 * `DialogueManager` — controls dialogue progression
 * `DialogueWidget` — handles dialogue presentation
+
+![Dices dialogue](media/dices_dialogue.gif)
 
 ## Technical Features
 
